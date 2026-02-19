@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
+app.disable('etag'); // Deshabilitar 304 Not Modified
 const server = http.createServer(app);
 
 // Configuración de CORS
@@ -51,6 +52,11 @@ app.post('/api/login', (req, res) => {
     res.json({ success: false, message: 'Credenciales incorrectas' });
 });
 
+// Endpoint para verificar estado de sesión (usado por el cliente para evitar "back button")
+app.get('/api/session-status', (req, res) => {
+    res.json({ authenticated: !!req.session.authenticated });
+});
+
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
@@ -58,6 +64,11 @@ app.get('/logout', (req, res) => {
 
 // Authentication Middleware
 function checkAuth(req, res, next) {
+    // Prevent caching of protected routes
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     if (req.session.authenticated) {
         return next();
     }

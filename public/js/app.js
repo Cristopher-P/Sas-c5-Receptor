@@ -42,11 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Estado Local de Reportes
+    let localReportes = [];
+
     // Inicializar Socket con Callbacks de UI
     initSocket(socket, {
         onConnect: () => console.log('✅ Conectado al servidor'),
         
         onLoadReports: (reportes) => {
+            localReportes = reportes; // Guardar estado
             UI.clearFeed();
             if(reportes.length === 0) {
                 UI.showEmptyState();
@@ -61,13 +65,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioPlayer.currentTime = 0;
                 audioPlayer.play().catch(e => console.error('Error audio:', e));
             }
+            
+            // Agregar a estado local
+            localReportes.unshift(reporte); // Agregar al inicio igual que en UI
+            
             UI.renderReport(reporte, true);
-            // Actualizar contadores si es necesario, o esperar al siguiente load
+            UI.renderStats(localReportes); // Actualizar contadores
         },
 
         onReportConfirmed: (data) => {
             console.log('Reporte confirmado:', data);
+            
+            // Actualizar estado local
+            const reporte = localReportes.find(r => r.folio_c4 === data.folio_c4);
+            if (reporte) {
+                reporte.status = 'confirmado';
+                reporte.folio_c5 = data.folio_c5;
+            }
+
             UI.markAsConfirmed(data.folio_c4);
+            UI.renderStats(localReportes); // Actualizar contadores
         }
     });
 
