@@ -1,0 +1,180 @@
+[
+  {
+    "folio_c4": "1902261051",
+    "fecha": "2026-02-19T06:00:00.000Z",
+    "hora": "10:51:00",
+    "ubicacion": "PRUEBA 5",
+    "motivo": "SOLICITUD DE OTROS SERVICIOS PÚBLICOS",
+    "descripcion": "PRUEBA 5",
+    "agente": "PRUEBA 5",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0",
+      "timestamp": "2026-02-19T16:52:13.894Z"
+    },
+    "folio_c5": "PRUEBA 5",
+    "recibido_at": "2026-02-19T16:52:14.239Z",
+    "status": "confirmado",
+    "origen": "SQS"
+  },
+  {
+    "folio_c4": "1902261047",
+    "fecha": "2026-02-19T06:00:00.000Z",
+    "hora": "10:47:00",
+    "ubicacion": "PRUEBA 4",
+    "motivo": "ROBO",
+    "descripcion": "PRUEBA 4",
+    "agente": "PRUEBA 4",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0",
+      "timestamp": "2026-02-19T16:48:08.254Z"
+    },
+    "folio_c5": "PRUEBA 4",
+    "recibido_at": "2026-02-19T16:48:09.478Z",
+    "status": "confirmado",
+    "origen": "SQS"
+  },
+  {
+    "folio_c4": "1802261259",
+    "fecha": "2026-02-18T06:00:00.000Z",
+    "hora": "12:59:00",
+    "ubicacion": "PRUEBA REENVIO DE FOLIO ",
+    "motivo": "PERSONA SOSPECHOSA",
+    "descripcion": "PRUEBA REENVIO DE FOLIO ",
+    "agente": "PRUEBA REENVIO DE FOLIO ",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0",
+      "timestamp": "2026-02-18T19:00:19.276Z"
+    },
+    "folio_c5": "Prueba Folio",
+    "recibido_at": "2026-02-18T19:00:19.655Z",
+    "status": "confirmado",
+    "origen": "SQS"
+  },
+  {
+    "folio_c4": "1802261202",
+    "fecha": "2026-02-18T06:00:00.000Z",
+    "hora": "12:02:00",
+    "ubicacion": "13625109594648850238",
+    "motivo": "VEHÍCULO SOSPECHOSO",
+    "descripcion": "13625109594648850238",
+    "agente": "13625109594648850238",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0",
+      "timestamp": "2026-02-18T18:03:23.391Z"
+    },
+    "folio_c5": "Prueba 3 Folio",
+    "recibido_at": "2026-02-18T18:03:23.926Z",
+    "status": "confirmado",
+    "origen": "SQS"
+  },
+  {
+    "folio_c4": "1802260935",
+    "fecha": "2026-02-18T06:00:00.000Z",
+    "hora": "09:35:00",
+    "ubicacion": "PRUEBA",
+    "motivo": "VEHÍCULO SOSPECHOSO",
+    "descripcion": "PRUEBA",
+    "agente": "PRUEBA",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "C5-2026-0006",
+    "recibido_at": "2026-02-18T15:36:02.372Z",
+    "status": "recibido"
+  },
+  {
+    "folio_c4": "1802260934",
+    "fecha": "2026-02-18T06:00:00.000Z",
+    "hora": "09:34:00",
+    "ubicacion": "prueba 3 ",
+    "motivo": "VEHÍCULO SOSPECHOSO",
+    "descripcion": "prueba",
+    "agente": "prueba ",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "C5-2026-0005",
+    "recibido_at": "2026-02-18T15:35:33.264Z",
+    "status": "recibido"
+  },
+  {
+    "folio_c4": "1802260926",
+    "fecha": "2026-02-18T06:00:00.000Z",
+    "hora": "09:26:00",
+    "ubicacion": "palmas",
+    "motivo": "PERSONA SOSPECHOSA",
+    "descripcion": "lolo",
+    "agente": "prueba ",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "C5-2026-0004",
+    "recibido_at": "2026-02-18T15:27:20.920Z",
+    "status": "recibido"
+  },
+  {
+    "folio_c4": "1702261115",
+    "fecha": "2026-02-17T06:00:00.000Z",
+    "hora": "11:15:00",
+    "ubicacion": "PRUEBA",
+    "motivo": "OTRO",
+    "descripcion": "PRUEBA",
+    "agente": "PRUEBA",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "C5-2026-0003",
+    "recibido_at": "2026-02-17T17:16:18.421Z",
+    "status": "recibido"
+  },
+  {
+    "folio_c4": "1702261110",
+    "fecha": "2026-02-17T06:00:00.000Z",
+    "hora": "11:10:00",
+    "ubicacion": "palmas",
+    "motivo": "VEHÍCULO SOSPECHOSO",
+    "descripcion": "fsdf",
+    "agente": "sdfsdf",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "C5-2026-0002",
+    "recibido_at": "2026-02-17T17:10:36.879Z",
+    "status": "recibido"
+  },
+  {
+    "folio_c4": "1702261109",
+    "fecha": "2026-02-17T06:00:00.000Z",
+    "hora": "11:09:00",
+    "ubicacion": "palmas",
+    "motivo": "VEHÍCULO SOSPECHOSO",
+    "descripcion": "jsldkjf",
+    "agente": "fsljdkfj",
+    "operador": "admin",
+    "meta": {
+      "source": "SAS-C4",
+      "version": "1.0"
+    },
+    "folio_c5": "000000000000",
+    "recibido_at": "2026-02-17T17:09:54.493Z",
+    "status": "confirmado"
+  }
+]

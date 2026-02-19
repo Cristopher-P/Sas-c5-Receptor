@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C5 Dashboard - Command Center</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="app-background"></div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar__header">
+                <div class="brand">
+                    <i class="fas fa-shield-halved brand__icon"></i>
+                    <div class="brand__text">
+                        <span class="brand__title">SAS C5</span>
+                        <span class="brand__subtitle">Command Center</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar__menu">
+                <button class="menu-item active" id="menu-tehuacan">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Tehuacán</span>
+                    <div class="menu-item__indicator"></div>
+                </button>
+                <button class="menu-item" id="menu-otros">
+                    <i class="fas fa-globe-americas"></i>
+                    <span>Otros Municipios</span>
+                </button>
+            </nav>
+
+            <div class="sidebar__footer">
+                <div class="status-panel">
+                    <div class="status-indicator online"></div>
+                    <span class="status-text">SISTEMA EN LÍNEA</span>
+                </div>
+                <!-- Version info or extra details could go here -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar glass-panel">
+                <div class="top-bar__left">
+                    <!-- Breadcrumbs or current view title could go here -->
+                    <h2 class="view-title"><i class="fas fa-satellite-dish"></i> Monitoreo en Tiempo Real</h2>
+                </div>
+
+                <div class="top-bar__center">
+                    <div class="clock-widget">
+                        <i class="far fa-clock"></i>
+                        <div class="clock" id="clock">00:00:00</div>
+                    </div>
+                </div>
+
+                <div class="top-bar__right">
+                    <button class="btn btn-icon btn-warning" id="btn-sound" title="Alternar Sonido">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-astronaut"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-role">OPERADOR C5</span>
+                            <span class="user-status">Activo</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Vista Principal (Tehuacán) -->
+            <div class="dashboard-grid" id="view-tehuacan">
+                <!-- Estadísticas Rápidas -->
+                <div class="stats-container">
+                    <div class="stat-card glass-panel" data-type="danger">
+                        <div class="stat-icon"><i class="fas fa-bell"></i></div>
+                        <div class="stat-content">
+                            <h3>Reportes Hoy</h3>
+                            <div class="number-display" id="count-today">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel" data-type="warning">
+                        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="stat-content">
+                            <h3>Pendientes</h3>
+                            <div class="number-display" id="count-pending">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel" data-type="success">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3>Atendidos</h3>
+                            <div class="number-display" id="count-processed">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feed de Alertas -->
+                <div class="feed-section glass-panel">
+                    <div class="feed-header">
+                        <div class="feed-title">
+                            <i class="fas fa-tower-broadcast"></i>
+                            TRANSMISIONES ENTRANTE - TEHUACÁN
+                        </div>
+                        <div class="live-indicator">
+                            <span class="dot"></span> LIVE
+                        </div>
+                    </div>
+                    <div id="alerts-feed" class="alerts-feed custom-scrollbar">
+                        <!-- Las alertas se inyectan aquí -->
+                        <div class="empty-state">
+                            <div class="radar-spinner"></div>
+                            <p>Esperando señal del C4...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista Error (Otros Municipios) -->
+            <div id="view-error" class="error-view hidden">
+                <div class="glass-panel error-card">
+                    <div class="error-code">404</div>
+                    <div class="error-content">
+                        <div class="error-title">OPCIÓN INHABILITADA</div>
+                        <div class="error-message">
+                            Estás usando una versión de prueba. Esta opción está inhabilitada.
+                            <br>Ponte en contacto con el desarrollador del sitio.
+                        </div>
+                        <div class="error-actions">
+                            <button class="btn btn-warning" onclick="document.getElementById('menu-tehuacan').click()">
+                                <i class="fas fa-arrow-left"></i> Volver a Tehuacán
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Audio para alertas -->
+    <audio id="alert-sound" src="sounds/alert.mp3"></audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
