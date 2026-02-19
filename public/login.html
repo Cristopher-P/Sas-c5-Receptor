@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAS C5 - Iniciar Sesión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Using external CSS for the dark theme adaptation -->
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="login-container">
+
+        <!-- CAJA DE LOGIN -->
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-shield-halved"></i>
+                <h1>SAS C5</h1>
+                <h2>Receptor de Emergencias</h2>
+            </div>
+
+            <!-- Indicador de Turno -->
+            <div class="turno-indicator">
+                <i class="fas fa-satellite-dish"></i> Sistema de Acceso - Monitor C5
+            </div>
+
+            <div class="login-body">
+                <!-- Alerta Informativa -->
+                <div class="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Ingresa tus credenciales operativas para acceder al monitor.</span>
+                </div>
+
+                <!-- Formulario -->
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user-astronaut"></i> Usuario
+                        </label>
+                        <input type="text" id="username" class="form-control" placeholder="Ingresa tu ID de Operador"
+                            required autofocus autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Contraseña
+                        </label>
+                        <input type="password" id="password" class="form-control"
+                            placeholder="Ingresa tu Clave de Acceso" required>
+                    </div>
+
+                    <!-- Estado del Sistema -->
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>Sistema operativo - Conectado</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-right-to-bracket"></i> Iniciar Sesión
+                    </button>
+
+                    <!-- Mensaje de Error (oculto por defecto) -->
+                    <div id="login-message" class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="error-text">Credenciales incorrectas</span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Pie de Página -->
+            <div class="login-footer">
+                <p>Sistema de Receptor C5 &copy; 2024</p>
+                <p class="version">Versión 2.0.0 | Protocolo SAS-C5</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>

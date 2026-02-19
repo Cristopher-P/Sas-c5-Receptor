@@ -12,6 +12,62 @@ const server = http.createServer(app);
 // Configuración de CORS
 app.use(cors());
 app.use(express.json());
+
+// Session Configuration
+const session = require('express-session');
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+// Public Static Files (CSS, JS, Sounds)
+app.use('/css', express.static(path.join(__dirname, 'public/css')));
+app.use('/js', express.static(path.join(__dirname, 'public/js')));
+app.use('/sounds', express.static(path.join(__dirname, 'public/sounds')));
+
+// Login Routes
+app.get('/login', (req, res) => {
+    if (req.session.authenticated) {
+        return res.redirect('/');
+    }
+    res.sendFile(path.join(__dirname, 'public/login.html'));
+});
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    // Simple check against .env
+    const validUser = process.env.ADMIN_USER || 'admin';
+    const validPass = process.env.ADMIN_PASS || 'admin123';
+
+    if (username === validUser && password === validPass) {
+        req.session.authenticated = true;
+        req.session.user = username;
+        return res.json({ success: true });
+    }
+    
+    res.json({ success: false, message: 'Credenciales incorrectas' });
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+// Authentication Middleware
+function checkAuth(req, res, next) {
+    if (req.session.authenticated) {
+        return next();
+    }
+    res.redirect('/login');
+}
+
+// Protect all following routes (Dashboard)
+app.use(checkAuth);
+
+// Main Dashboard (Protected)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Inicializar Socket.io
