@@ -21,12 +21,13 @@ app.use(express.json());
 
 // Session Configuration
 const session = require('express-session');
-app.use(session({
+const sessionMiddleware = session({
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false } // Set to true if using HTTPS
-}));
+});
+app.use(sessionMiddleware);
 
 // Public Static Files (CSS, JS, Sounds)
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
@@ -94,6 +95,21 @@ const io = new Server(server, {
     }
 });
 
+// Compartir sesión express con Socket.io
+const sharedSession = (socket, next) => sessionMiddleware(socket.request, {}, next);
+io.use(sharedSession);
+
+// Middleware de autenticación para WebSockets
+io.use((socket, next) => {
+    const session = socket.request.session;
+    if (session && session.authenticated) {
+        next();
+    } else {
+        console.log('🚫 Conexión de socket denegada (No autenticado)');
+        next(new Error("unauthorized"));
+    }
+});
+
 // Base de Datos
 const pool = require('./config/database');
 
@@ -147,6 +163,11 @@ app.post('/api/confirmar-folio', async (req, res) => {
         console.error('Error confirmando folio:', error);
         res.status(500).json({ success: false, message: error.message });
     }
+});
+
+// Catch-all route for 404 (Página no encontrada)
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
 });
 
 // Inicializar SQS Worker

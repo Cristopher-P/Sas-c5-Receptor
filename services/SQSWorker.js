@@ -76,8 +76,15 @@ class SQSWorker {
         // Generar Folio C5
         const fecha = new Date();
         const anio = fecha.getFullYear();
-        // Usar la referencia de reportes en memoria
-        const consecutivo = this.reportes.length + 1; 
+        let consecutivo = 1;
+        
+        try {
+            const [rows] = await this.pool.execute('SELECT COUNT(*) as total FROM reportes WHERE folio_c5 LIKE ?', [`C5-${anio}-%`]);
+            consecutivo = rows[0].total + 1;
+        } catch (err) {
+            console.error('Error calculando consecutivo:', err);
+        }
+        
         const folioC5 = `C5-${anio}-${consecutivo.toString().padStart(4, '0')}`;
         
         // Agregar datos de recepción
