@@ -3,14 +3,19 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const fs = require('fs');
 const path = require('path');
+const helmet = require('helmet');
+const morgan = require('morgan');
 
 const app = express();
 app.disable('etag'); // Deshabilitar 304 Not Modified
 const server = http.createServer(app);
 
-// Configuración de CORS
+// Configuración de CORS y Seguridad
+app.use(helmet({
+    contentSecurityPolicy: false // Desactivar CSP por ahora para evitar conflictos con scripts inline/externos en dev
+}));
+app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 
@@ -84,34 +89,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Inicializar Socket.io
 const io = new Server(server, {
     cors: {
-        origin: "*", // Permitir conexiones desde cualquier origen (ajustar en prod)
+        origin: "*", 
         methods: ["GET", "POST"]
     }
 });
 
-// Almacenamiento simple en memoria (y persistencia en JSON)
-const DB_FILE = path.join(__dirname, 'storage.json');
-let reportes = [];
-
-// Cargar reportes al iniciar
-if (fs.existsSync(DB_FILE)) {
-    try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        reportes = JSON.parse(data);
-    } catch (err) {
-        console.error('Error leyendo DB:', err);
-    }
-} else {
-    // Crear archivo si no existe
-    fs.writeFileSync(DB_FILE, JSON.stringify([], null, 2));
-}
+// Base de Datos
+const pool = require('./config/database');
 
 // Socket.io conexiones
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('Cliente conectado al dashboard:', socket.id);
     
-    // Enviar reportes existentes al conectar
-    socket.emit('load_reports', reportes);
+    try {
+        // Cargar reportes desde MySQL
+        const [rows] = await pool.query('SELECT * FROM reportes ORDER BY id DESC LIMIT 50');
+        socket.emit('load_reports', rows);
+    } catch (error) {
+        console.error('Error cargando reportes iniciales:', error);
+    }
 
     socket.on('disconnect', () => {
         console.log('Cliente desconectado:', socket.id);
@@ -129,21 +125,23 @@ app.post('/api/confirmar-folio', async (req, res) => {
 
         console.log(`📝 Confirmando folio manual: ${folio_c4} -> ${folio_c5}`);
 
-        // 1. Actualizar en memoria local
-        const reporteIndex = reportes.findIndex(r => r.folio_c4 === folio_c4);
-        if (reporteIndex !== -1) {
-            reportes[reporteIndex].folio_c5 = folio_c5;
-            reportes[reporteIndex].status = 'confirmado'; // Nuevo estado
-            guardarDB();
-            
-            // Notificar a todos los dashboards que se confirmó
+        // 1. Actualizar en Base de Datos
+        const [result] = await pool.execute(
+            'UPDATE reportes SET folio_c5 = ?, status = ?, fecha_confirmacion = NOW() WHERE folio_c4 = ?',
+            [folioC5, 'confirmado', folioC4]
+        );
+
+        if (result.affectedRows > 0) {
+            // Notificar a todos los dashboards
             io.emit('report_confirmed', { folio_c4, folio_c5 });
+             
+            // 2. Enviar a C4
+            await worker.enviarRespuestaC4(folio_c4, folioC5);
+            
+            res.json({ success: true, message: 'Folio confirmado y enviado a C4' });
+        } else {
+            res.status(404).json({ success: false, message: 'Reporte no encontrado' });
         }
-
-        // 2. Enviar a C4 vía SQS (Usando el método del worker)
-        await worker.enviarRespuestaC4(folio_c4, folio_c5);
-
-        res.json({ success: true, message: 'Folio confirmado y enviado a C4' });
 
     } catch (error) {
         console.error('Error confirmando folio:', error);
@@ -155,15 +153,12 @@ app.post('/api/confirmar-folio', async (req, res) => {
 const SQSWorker = require('./services/SQSWorker');
 const worker = new SQSWorker(io);
 
-// Función auxiliar para guardar (Restaurada)
-function guardarDB() {
-    fs.writeFileSync(DB_FILE, JSON.stringify(reportes, null, 2));
-}
+
 
 // Iniciar worker cuando el servidor esté listo
-// Se le pasa la referencia a 'reportes' y la función 'guardarDB'
+// Se le pasa solo el pool implícitamente por el módulo
 try {
-    worker.start(reportes, guardarDB);
+    worker.start();
 } catch (err) {
     console.error('Error iniciando Worker SQS:', err);
     console.log('Nota: Asegúrate de configurar las credenciales AWS en .env');
@@ -172,7 +167,7 @@ try {
 // Iniciar servidor
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
-    console.log(`\n🚀 SERVIDOR C5 (RECEPTOR) CORRIENDO EN PUERTO ${PORT}`);
-    console.log(`👉 Dashboard: http://localhost:${PORT}`);
-    console.log(`⚡ Modo: AWS SQS Polling Activo\n`);
+    console.log(`\nSERVIDOR C5 (RECEPTOR) CORRIENDO EN PUERTO ${PORT}`);
+    console.log(`Dashboard: http://localhost:${PORT}`);
+    console.log(`Modo: AWS SQS Polling Activo\n`);
 });

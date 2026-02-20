@@ -6,7 +6,9 @@ class SQSWorker {
         this.io = io;
         this.queueUrl = process.env.AWS_SQS_QUEUE_URL;
         this.responseQueueUrl = process.env.AWS_SQS_RESPONSE_QUEUE_URL;
-        this.reportes = []; // Referencia local para actualizar
+        this.queueUrl = process.env.AWS_SQS_QUEUE_URL;
+        this.responseQueueUrl = process.env.AWS_SQS_RESPONSE_QUEUE_URL;
+        this.pool = require('../config/database'); // Importar conexión
         this.isRunning = false;
 
         // Cliente SQS
@@ -22,11 +24,9 @@ class SQSWorker {
     start(reportesRef, saveCallback) {
         if (this.isRunning) return;
         
-        console.log('🔌 Iniciando SQS Worker...');
-        console.log('🎯 Escuchando cola:', this.queueUrl);
-
-        this.reportes = reportesRef;
-        this.saveCallback = saveCallback;
+        console.log('Iniciando SQS Worker...');
+        console.log('Escuchando cola:', this.queueUrl);
+        // Ya no necesitamos referencias locales
 
         // Configurar Consumer de sqs-consumer
         // Nota: sqs-consumer simplifica el polling
@@ -39,25 +39,25 @@ class SQSWorker {
         });
 
         app.on('error', (err) => {
-            console.error('🔥 Error en SQS Worker:', err.message);
+            console.error('Error en SQS Worker:', err.message);
         });
 
         app.on('processing_error', (err) => {
-            console.error('🔥 Error procesando mensaje:', err.message);
+            console.error('Error procesando mensaje:', err.message);
         });
 
         app.on('timeout_error', (err) => {
-            console.error('🔥 Timeout procesando mensaje:', err.message);
+            console.error('Timeout procesando mensaje:', err.message);
         });
 
         app.start();
         this.isRunning = true;
-        console.log('✅ SQS Worker activo y esperando mensajes.');
+        console.log('SQS Worker activo y esperando mensajes.');
     }
 
     async procesarMensaje(message) {
         try {
-            console.log('📨 Mensaje recibido de SQS');
+            console.log('Mensaje recibido de SQS');
             const body = JSON.parse(message.Body);
             
             // Procesar el reporte recibido
@@ -89,12 +89,37 @@ class SQSWorker {
             origen: 'SQS'
         };
 
-        // Guardar en memoria y persistir
-        this.reportes.unshift(nuevoReporte);
+        // Guardar en MySQL
+        const sql = `
+            INSERT INTO reportes 
+            (folio_c4, folio_c5, fecha, hora, motivo, ubicacion, descripcion, agente, operador, origen, status, recibido_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `;
+        
+        try {
+            await this.pool.execute(sql, [
+                nuevoReporte.folio_c4,
+                nuevoReporte.folio_c5,
+                nuevoReporte.fecha,
+                nuevoReporte.hora || nuevoReporte.hora_envio,
+                nuevoReporte.motivo,
+                nuevoReporte.ubicacion,
+                nuevoReporte.descripcion,
+                nuevoReporte.agente,
+                nuevoReporte.operador,
+                nuevoReporte.origen,
+                nuevoReporte.status
+            ]);
+            console.log('Reporte guardado en MySQL:', nuevoReporte.folio_c4);
+        } catch (error) {
+            console.error('Error guardando en MySQL:', error.message);
+            // Igual notificamos al dashboard aunque falle la DB (para visualización)
+        }
+
         if (this.saveCallback) this.saveCallback();
 
         // Notificar al Dashboard (Socket.IO)
-        console.log('📢 Emitiendo new_report al dashboard');
+        console.log('Emitiendo new_report al dashboard');
         this.io.emit('new_report', nuevoReporte);
 
         // RESPUESTA AUTOMÁTICA DESHABILITADA (Ahora es manual desde el Dashboard)
@@ -122,10 +147,10 @@ class SQSWorker {
             
             const command = new SendMessageCommand(params);
             await this.sqsClient.send(command);
-            console.log(`📤 Respuesta enviada a C4: ${folioC4} -> ${folioC5}`);
+            console.log(`Respuesta enviada a C4: ${folioC4} -> ${folioC5}`);
             
         } catch (error) {
-            console.error('🔥 Error enviando respuesta a C4:', error.message);
+            console.error('Error enviando respuesta a C4:', error.message);
         }
     }
 }

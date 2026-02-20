@@ -136,7 +136,14 @@ window.confirmarFolio = async (folioC4) => {
     const folioC5 = input.value;
 
     if (!folioC5) {
-        alert('Por favor escribe un folio válido');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Folio incompleto',
+            text: 'Por favor escribe un folio válido',
+            confirmButtonColor: '#00fff2',
+            background: '#0a192f',
+            color: '#fff'
+        });
         return;
     }
 
@@ -149,13 +156,25 @@ window.confirmarFolio = async (folioC4) => {
         if (result.success) {
             UI.markAsConfirmed(folioC4);
         } else {
-            alert('Error al enviar: ' + result.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al enviar: ' + result.message,
+                background: '#0a192f',
+                color: '#fff'
+            });
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar a C4';
             btn.disabled = false;
         }
     } catch (error) {
         console.error(error);
-        alert('Error de conexión');
+        Swal.fire({
+            icon: 'error',
+            title: 'Sin conexión',
+            text: 'No se pudo conectar con el servidor',
+            background: '#0a192f',
+            color: '#fff'
+        });
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar a C4';
         btn.disabled = false;
     }
