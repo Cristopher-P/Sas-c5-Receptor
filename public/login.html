@@ -9,6 +9,13 @@
     <link rel="icon" href="/favicon.png">
     <!-- Using external CSS for the dark theme adaptation -->
     <link rel="stylesheet" href="css/login.css">
+
+    <!-- URL Masking -->
+    <script>
+        if (window.history.replaceState && window.location.pathname !== "/") {
+            window.history.replaceState(null, null, "/");
+        }
+    </script>
 </head>
 
 <body>
