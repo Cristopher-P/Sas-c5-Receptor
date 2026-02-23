@@ -23,7 +23,7 @@ class SQSWorker {
 
     start(reportesRef, saveCallback) {
         if (this.isRunning) return;
-        
+
         console.log('Iniciando SQS Worker...');
         console.log('Escuchando cola:', this.queueUrl);
         // Ya no necesitamos referencias locales
@@ -59,10 +59,10 @@ class SQSWorker {
         try {
             console.log('Mensaje recibido de SQS');
             const body = JSON.parse(message.Body);
-            
+
             // Procesar el reporte recibido
             await this.handleNewReport(body);
-            
+
             // El mensaje se borra automáticamente si esta función termina sin error
         } catch (error) {
             console.error('Error parseando mensaje:', error);
@@ -72,21 +72,21 @@ class SQSWorker {
 
     async handleNewReport(reporteData) {
         // Lógica similar a la que tenías en el POST /api/recepcion/c4
-        
+
         // Generar Folio C5
         const fecha = new Date();
         const anio = fecha.getFullYear();
         let consecutivo = 1;
-        
+
         try {
             const [rows] = await this.pool.execute('SELECT COUNT(*) as total FROM reportes WHERE folio_c5 LIKE ?', [`C5-${anio}-%`]);
             consecutivo = rows[0].total + 1;
         } catch (err) {
             console.error('Error calculando consecutivo:', err);
         }
-        
+
         const folioC5 = `C5-${anio}-${consecutivo.toString().padStart(4, '0')}`;
-        
+
         // Agregar datos de recepción
         const nuevoReporte = {
             ...reporteData,
@@ -102,32 +102,34 @@ class SQSWorker {
             (folio_c4, folio_c5, fecha, hora, motivo, ubicacion, descripcion, agente, operador, origen, status, recibido_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `;
-        
+
         try {
             await this.pool.execute(sql, [
-                nuevoReporte.folio_c4,
+                nuevoReporte.folio_c4 || 'SIN_FOLIO',
                 nuevoReporte.folio_c5,
-                nuevoReporte.fecha,
-                nuevoReporte.hora || nuevoReporte.hora_envio,
-                nuevoReporte.motivo,
-                nuevoReporte.ubicacion,
-                nuevoReporte.descripcion,
-                nuevoReporte.agente,
-                nuevoReporte.operador,
-                nuevoReporte.origen,
-                nuevoReporte.status
+                nuevoReporte.fecha ? new Date(nuevoReporte.fecha).toLocaleString('sv-SE', { timeZone: 'America/Mexico_City' }).replace('T', ' ') : new Date().toLocaleString('sv-SE', { timeZone: 'America/Mexico_City' }).replace('T', ' '),
+                nuevoReporte.hora || nuevoReporte.hora_envio || '00:00',
+                nuevoReporte.motivo || 'No especificado',
+                nuevoReporte.ubicacion || 'No especificada',
+                nuevoReporte.descripcion || 'Sin descripción',
+                nuevoReporte.agente || 'ND',
+                nuevoReporte.operador || 'Sistema',
+                nuevoReporte.origen || 'SQS',
+                nuevoReporte.status || 'recibido'
             ]);
-            console.log('Reporte guardado en MySQL:', nuevoReporte.folio_c4);
+            console.log('✅ Reporte guardado en MySQL:', nuevoReporte.folio_c4);
+
+            if (this.saveCallback) this.saveCallback();
+
+            // SÓLO notificar al Dashboard (UI) si guardó exitosamente en MySQL
+            console.log('Emitiendo new_report al dashboard');
+            this.io.emit('new_report', nuevoReporte);
+
         } catch (error) {
-            console.error('Error guardando en MySQL:', error.message);
-            // Igual notificamos al dashboard aunque falle la DB (para visualización)
+            console.error('❌ Error guardando en MySQL:', error.message);
+            // Mostrar error directo en la IU del usuario para debugearlo fácil sin terminal
+            this.io.emit('db_error_visible', error.message);
         }
-
-        if (this.saveCallback) this.saveCallback();
-
-        // Notificar al Dashboard (Socket.IO)
-        console.log('Emitiendo new_report al dashboard');
-        this.io.emit('new_report', nuevoReporte);
 
         // RESPUESTA AUTOMÁTICA DESHABILITADA (Ahora es manual desde el Dashboard)
         // if (this.responseQueueUrl && reporteData.folio_c4) {
@@ -151,11 +153,11 @@ class SQSWorker {
                     "Tipo": { DataType: "String", StringValue: "RespuestaFolio" }
                 }
             };
-            
+
             const command = new SendMessageCommand(params);
             await this.sqsClient.send(command);
             console.log(`Respuesta enviada a C4: ${folioC4} -> ${folioC5}`);
-            
+
         } catch (error) {
             console.error('Error enviando respuesta a C4:', error.message);
         }

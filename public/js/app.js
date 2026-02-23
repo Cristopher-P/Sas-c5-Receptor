@@ -6,10 +6,15 @@ import { UI } from './modules/ui.js';
 
 const socket = io();
 
+// Escuchar errores críticos de Base de Datos y mostrarlos al usuario
+socket.on('db_error_visible', (errorMessage) => {
+    alert("❌ Error Crítico al Guardar en Base de Datos MySQL:\n\n" + errorMessage + "\n\n(Tus registros no se guardaron, revisa tu MySQL local)");
+});
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 SAS C5 Receptor iniciado');
-    
+
     // Configurar reloj
     const clockElement = document.getElementById('clock');
     setInterval(() => {
@@ -24,19 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSound.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
         const icon = btnSound.querySelector('i');
-        
+
         if (soundEnabled) {
             btnSound.classList.remove('btn-warning');
             btnSound.classList.add('btn-success'); // Or remain warning but active
             btnSound.style.background = 'var(--accent-green)'; // Optional inline override or just rely on class
             icon.className = 'fas fa-volume-up';
             btnSound.title = 'Sonido: ENCENDIDO';
-            
+
             audioPlayer.play().catch(e => console.log('Audio init error', e));
         } else {
             btnSound.classList.add('btn-warning');
             btnSound.classList.remove('btn-success');
-            btnSound.style.background = ''; 
+            btnSound.style.background = '';
             icon.className = 'fas fa-volume-mute';
             btnSound.title = 'Sonido: APAGADO';
         }
@@ -48,11 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar Socket con Callbacks de UI
     initSocket(socket, {
         onConnect: () => console.log('✅ Conectado al servidor'),
-        
+
         onLoadReports: (reportes) => {
             localReportes = reportes; // Guardar estado
             UI.clearFeed();
-            if(reportes.length === 0) {
+            if (reportes.length === 0) {
                 UI.showEmptyState();
             } else {
                 reportes.forEach(r => UI.renderReport(r, false));
@@ -61,21 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         onNewReport: (reporte) => {
-            if(soundEnabled) {
+            if (soundEnabled) {
                 audioPlayer.currentTime = 0;
                 audioPlayer.play().catch(e => console.error('Error audio:', e));
             }
-            
+
             // Agregar a estado local
             localReportes.unshift(reporte); // Agregar al inicio igual que en UI
-            
+
             UI.renderReport(reporte, true);
             UI.renderStats(localReportes); // Actualizar contadores
         },
 
         onReportConfirmed: (data) => {
             console.log('Reporte confirmado:', data);
-            
+
             // Actualizar estado local
             const reporte = localReportes.find(r => r.folio_c4 === data.folio_c4);
             if (reporte) {
@@ -97,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuTehuacan.addEventListener('click', () => {
         menuTehuacan.classList.add('active');
         menuOtros.classList.remove('active');
-        
+
         viewTehuacan.classList.remove('hidden');
         viewError.classList.add('hidden');
     });
@@ -105,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuOtros.addEventListener('click', () => {
         menuOtros.classList.add('active');
         menuTehuacan.classList.remove('active');
-        
+
         viewTehuacan.classList.add('hidden');
         viewError.classList.remove('hidden');
     });
