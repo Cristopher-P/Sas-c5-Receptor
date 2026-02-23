@@ -42,9 +42,22 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/login.html'));
 });
 
-app.post('/api/login', (req, res) => {
+// Rate Limiting para Login
+const rateLimit = require('express-rate-limit');
+const loginLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 5, // Limit each IP to 5 requests per `window` (here, per 5 minutes)
+    message: {
+        success: false,
+        message: 'Demasiados intentos de inicio de sesión. Por favor, intente de nuevo en 5 minutos.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
-    
+
     // Simple check against .env
     const validUser = process.env.ADMIN_USER || 'admin';
     const validPass = process.env.ADMIN_PASS || 'admin123';
@@ -54,7 +67,7 @@ app.post('/api/login', (req, res) => {
         req.session.user = username;
         return res.json({ success: true });
     }
-    
+
     res.json({ success: false, message: 'Credenciales incorrectas' });
 });
 
@@ -74,7 +87,7 @@ function checkAuth(req, res, next) {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    
+
     if (req.session.authenticated) {
         return next();
     }
@@ -90,7 +103,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Inicializar Socket.io
 const io = new Server(server, {
     cors: {
-        origin: "*", 
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
@@ -105,7 +118,7 @@ io.use((socket, next) => {
     if (session && session.authenticated) {
         next();
     } else {
-        console.log('🚫 Conexión de socket denegada (No autenticado)');
+        console.log(' Conexión de socket denegada (No autenticado)');
         next(new Error("unauthorized"));
     }
 });
@@ -114,15 +127,16 @@ io.use((socket, next) => {
 const pool = require('./config/database');
 
 // Socket.io conexiones
+// Socket.io conexiones
 io.on('connection', async (socket) => {
     console.log('Cliente conectado al dashboard:', socket.id);
-    
+
+    // Cargar reportes iniciales al conectar
     try {
-        // Cargar reportes desde MySQL
         const [rows] = await pool.query('SELECT * FROM reportes ORDER BY id DESC LIMIT 50');
         socket.emit('load_reports', rows);
     } catch (error) {
-        console.error('Error cargando reportes iniciales:', error);
+        console.error('Error cargando reportes iniciales:', error.message);
     }
 
     socket.on('disconnect', () => {
@@ -134,26 +148,26 @@ io.on('connection', async (socket) => {
 app.post('/api/confirmar-folio', async (req, res) => {
     try {
         const { folio_c4, folio_c5 } = req.body;
-        
+
         if (!folio_c4 || !folio_c5) {
             return res.status(400).json({ success: false, message: 'Faltan datos' });
         }
 
-        console.log(`📝 Confirmando folio manual: ${folio_c4} -> ${folio_c5}`);
+        console.log(` Confirmando folio manual: ${folio_c4} -> ${folio_c5}`);
 
         // 1. Actualizar en Base de Datos
         const [result] = await pool.execute(
             'UPDATE reportes SET folio_c5 = ?, status = ?, fecha_confirmacion = NOW() WHERE folio_c4 = ?',
-            [folioC5, 'confirmado', folioC4]
+            [folio_c5, 'confirmado', folio_c4]
         );
 
         if (result.affectedRows > 0) {
             // Notificar a todos los dashboards
             io.emit('report_confirmed', { folio_c4, folio_c5 });
-             
+
             // 2. Enviar a C4
-            await worker.enviarRespuestaC4(folio_c4, folioC5);
-            
+            await worker.enviarRespuestaC4(folio_c4, folio_c5);
+
             res.json({ success: true, message: 'Folio confirmado y enviado a C4' });
         } else {
             res.status(404).json({ success: false, message: 'Reporte no encontrado' });
